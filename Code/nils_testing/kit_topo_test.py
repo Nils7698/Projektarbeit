@@ -24,7 +24,7 @@ class MyTopo(Topo):
         # Leaf name convention: LN1R1, LS2R1, ..., LN10R1 (Leaf (North | South) [number] Router (1|2))
         # Each Leaf has 3 interfaces: 
         # - eth2 for the connection to the other leaf router in the same Subnet
-        # - eth3 for the connection to the Spine switch (IP Range 10.0.200.1 - 10.0.200.x) / (IP Range 10.1.200.1 - 10.1.200.x)
+        # - eth3 for the connection to the Spine switch (IP Range 10.0.201.1 - 10.0.2xx.1) / (IP Range 10.1.201.1 - 10.1.2xx.1). The last IP is reserved for the Spine switch (e.g 10.0.201.254)
         # - eth1 for the connection to clients/servers/L2-Switches in the same subnet (for later use)
         interfaceIterator = 1
         for i, leaf in enumerate(self.leafs_north):
