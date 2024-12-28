@@ -107,7 +107,6 @@ def configure_routes(net):
         """
         router1 = net.get(f'{leaf}R1')
         router2 = net.get(f'{leaf}R2')
-        #Routing for R1
         for i in range(0,10):
             if i == subnetNo:
                 continue
