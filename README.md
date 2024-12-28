@@ -4,9 +4,9 @@
 
 ### TODOS
 - [x] Configure routing in Spine North
-- [] Configure routing in Spine South
-- [] Configure routing between the spines
-- [] Add clients
-- [] look what metrics we can collect
-- [] Create networking scenarios
-- [] execute the scenarios and save data
+- [ ] Configure routing in Spine South
+- [ ] Configure routing between the spines
+- [ ] Add clients
+- [ ] look what metrics we can collect
+- [ ] Create networking scenarios
+- [ ] execute the scenarios and save data
