@@ -7,6 +7,7 @@ from mininet.topo import Topo
 from mininet.link import TCLink
 import os
 
+# clears Mininet cache
 os.system("sudo mn -c")
 
 class MyTopo(Topo):
@@ -79,10 +80,10 @@ def configure_routes(net):
         router2 = net.get(f'{leaf}R2')
         router1.cmd("sysctl -w net.ipv4.ip_forward=1")
         router2.cmd("sysctl -w net.ipv4.ip_forward=1")
-        router1.cmd("ifconfig " + f'{leaf}R1-eth3 10.1.200.{iterator}/24')
+        router1.cmd("ifconfig " + f'{leaf}R1-eth3 10.1.{200+iterator}.1/24')
         router1.cmd("ifconfig " + f'{leaf}R1-eth2 10.1.{netIterator}.1/24')
         iterator += 1
-        router2.cmd("ifconfig " + f'{leaf}R2-eth3 10.1.200.{iterator}/24')
+        router2.cmd("ifconfig " + f'{leaf}R2-eth3 10.1.{200+iterator}.1/24')
         router2.cmd("ifconfig " + f'{leaf}R2-eth2 10.1.{netIterator}.2/24')
         iterator += 1
         netIterator += 1
@@ -97,10 +98,13 @@ def configure_routes(net):
 
     ########## Static routes configuration ##########
 
-    #TODO: Get Routing from Spine to spine to work
-    #TODO: Clean up the code
-
-    def addStaticRoutes(leaf, subnetNo):
+    def addStaticRoutes(leaf, subnetNo, NorthSouthID):
+        """Adds static routes to the routers of the leafs
+        Args:
+            leaf (str): Leaf name
+            subnetNo (int): Subnet number
+            NorthSouthID (int): 0 for North, 1 for South
+        """
         router1 = net.get(f'{leaf}R1')
         router2 = net.get(f'{leaf}R2')
         #Routing for R1
@@ -108,33 +112,39 @@ def configure_routes(net):
             if i == subnetNo:
                 continue
             #Route to Subnet
-            router1.cmd("ip route add 10.0."+ str(i) + ".0/24 via 10.0." + str(201+2*subnetNo) + ".254")
-        
+            router1.cmd("ip route add 10." + str(NorthSouthID) + "."+ str(i) + ".0/24 via 10." + str(NorthSouthID) + "." + str(201+2*subnetNo) + ".254")
+            print("ip route add 10." + str(NorthSouthID) + "."+ str(i) + ".0/24 via 10." + str(NorthSouthID) + "." + str(201+2*subnetNo) + ".254")
         for i in range(0,10):
             #Route to Spine
-            router1.cmd("ip route add 10.0." + str(201+i) + ".0/24 via 10.0." + str(201+2*subnetNo) + ".254")
+            router1.cmd("ip route add 10." + str(NorthSouthID) + "." + str(201+i) + ".0/24 via 10." + str(NorthSouthID) + "." + str(201+2*subnetNo) + ".254")
+            print("ip route add 10." + str(NorthSouthID) + "." + str(201+i) + ".0/24 via 10." + str(NorthSouthID) + "." + str(201+2*subnetNo) + ".254")
 
         #Routing for R2
         for i in range(0,10):
             if i == subnetNo:
                 continue
             #Route to Subnet
-            router2.cmd("ip route add 10.0."+ str(i) + ".0/24 via 10.0." + str(201+2*subnetNo+1) + ".254")
+            router2.cmd("ip route add 10." + str(NorthSouthID) + "." + str(i) + ".0/24 via 10." + str(NorthSouthID) + "." + str(201+2*subnetNo+1) + ".254")
+            print("ip route add 10." + str(NorthSouthID) + "." + str(i) + ".0/24 via 10." + str(NorthSouthID) + "." + str(201+2*subnetNo+1) + ".254")
         
         for i in range(0,10):
             #Route to Spine
-            router2.cmd("ip route add 10.0." + str(201+i) + ".0/24 via 10.0." + str(201+2*subnetNo+1) + ".254")
+            router2.cmd("ip route add 10." + str(NorthSouthID) + "." + str(201+i) + ".0/24 via 10." + str(NorthSouthID) + "." + str(201+2*subnetNo+1) + ".254")
+            print("ip route add 10." + str(NorthSouthID) + "." + str(201+i) + ".0/24 via 10." + str(NorthSouthID) + "." + str(201+2*subnetNo+1) + ".254")
 
 
     def addStaticRoutesSpine():
         for i in range(0,10):
             net['SN'].cmd("ip route add 10.0."+ str(i) + ".0/24 via 10.0." + str(201+2*i) + ".1")
+            net['SS'].cmd("ip route add 10.1."+ str(i) + ".0/24 via 10.1." + str(201+2*i) + ".1")
 
 
 
     for i in range(10):
-        addStaticRoutes(f'LN{i+1}', i)
-        
+        addStaticRoutes(f'LN{i+1}', i, 0)
+        addStaticRoutes(f'LS{i+1}', i, 1)
+   
+
     addStaticRoutesSpine()
 
 
