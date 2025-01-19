@@ -65,11 +65,19 @@ class MyTopo(Topo):
             return client
 
 
+        
+        addClient('SCC_N1', '10.0.100.200/24', 'LN1SW')
+        addClient('CAMPUS_N', '10.0.101.200/24', 'LN2SW')
+        addClient('LSDF', '10.0.102.200/24', 'LN3SW')
+        addClient('FILE', '10.0.105.200/24', 'LN6SW')
+        addClient('SCC_N2', '10.0.107.200/24', 'LN8SW')
+        addClient('BWCLOUD', '10.0.109.200/24', 'LN10SW')
 
-        addClient('s1', '10.0.100.10/24', 'LN1SW')
-        addClient('s2', '10.0.101.10/24', 'LN2SW')
-
-        print(hosts)
+        #Static Services South
+        addClient('SCC_S1', '10.1.100.200/24', 'LS1SW')
+        addClient('CAMPUS_S', '10.1.101.200/24', 'LS2SW')
+        addClient('VM', '10.1.105.200/24', 'LS6SW')
+        addClient('SCC_S2', '10.1.109.200/24', 'LS10SW')
         
 
 
@@ -108,9 +116,11 @@ def configure_routes(net):
         router2.cmd("sysctl -w net.ipv4.ip_forward=1")
         router1.cmd("ifconfig " + f'{leaf}R1-eth3 10.1.{200+iterator}.1/24')
         router1.cmd("ifconfig " + f'{leaf}R1-eth2 10.1.{netIterator}.1/24')
+        router1.cmd("ifconfig " + f'{leaf}R1-eth1 10.1.{100+netIterator}.1/24')
         iterator += 1
         router2.cmd("ifconfig " + f'{leaf}R2-eth3 10.1.{200+iterator}.1/24')
         router2.cmd("ifconfig " + f'{leaf}R2-eth2 10.1.{netIterator}.2/24')
+        router2.cmd("ifconfig " + f'{leaf}R2-eth1 10.1.{100+netIterator}.2/24')
         iterator += 1
         netIterator += 1
 
@@ -168,37 +178,73 @@ def configure_routes(net):
 
     #Client/Server Routing
 
+    for i in range(0,10):
+        net['SCC_N1'].cmd("ip route add 10.0."+ str(100+i) + ".0/24 via 10.0.100.1")
+        net['SCC_N1'].cmd("ip route add 10.0."+ str(200+i) + ".0/24 via 10.0.100.1")
+        net['SCC_N1'].cmd("ip route add 10.0."+ str(0+i) + ".0/24 via 10.0.100.1")
 
-    net['s1'].cmd('ip route add default via 10.0.100.1')
-    net['s1'].cmd('ip route add 10.0.100.0/24 via 10.0.100.1')
-    net['s1'].cmd('ip route add 10.0.101.0/24 via 10.0.100.1')
-    net['s1'].cmd('ip route add 10.0.102.0/24 via 10.0.100.1')
+        net['CAMPUS_N'].cmd("ip route add 10.0."+ str(100+i) + ".0/24 via 10.0.101.1")
+        net['CAMPUS_N'].cmd("ip route add 10.0."+ str(200+i) + ".0/24 via 10.0.101.1")
+        net['CAMPUS_N'].cmd("ip route add 10.0."+ str(0+i) + ".0/24 via 10.0.101.1")
 
-    net['s1'].cmd('ip route add 10.0.0.0/24 via 10.0.100.1')
-    net['s1'].cmd('ip route add 10.0.1.0/24 via 10.0.100.1')
-    net['s1'].cmd('ip route add 10.0.2.0/24 via 10.0.100.1')
-    net['s1'].cmd('ip route add 10.0.3.0/24 via 10.0.100.1')
+        net['LSDF'].cmd("ip route add 10.0."+ str(100+i) + ".0/24 via 10.0.102.1")
+        net['LSDF'].cmd("ip route add 10.0."+ str(200+i) + ".0/24 via 10.0.102.1")
+        net['LSDF'].cmd("ip route add 10.0."+ str(0+i) + ".0/24 via 10.0.102.1")
 
-    net['s1'].cmd('ip route add 10.0.201.0/24 via 10.0.100.1')
-    net['s1'].cmd('ip route add 10.0.202.0/24 via 10.0.100.1')
-    net['s1'].cmd('ip route add 10.0.203.0/24 via 10.0.100.1')
-    net['s1'].cmd('ip route add 10.0.204.0/24 via 10.0.100.1')
+        net['FILE'].cmd("ip route add 10.0."+ str(100+i) + ".0/24 via 10.0.105.1")
+        net['FILE'].cmd("ip route add 10.0."+ str(200+i) + ".0/24 via 10.0.105.1")
+        net['FILE'].cmd("ip route add 10.0."+ str(0+i) + ".0/24 via 10.0.105.1")
+
+        net['SCC_N2'].cmd("ip route add 10.0."+ str(100+i) + ".0/24 via 10.0.107.1")
+        net['SCC_N2'].cmd("ip route add 10.0."+ str(200+i) + ".0/24 via 10.0.107.1")
+        net['SCC_N2'].cmd("ip route add 10.0."+ str(0+i) + ".0/24 via 10.0.107.1")
+        
+        net['BWCLOUD'].cmd("ip route add 10.0."+ str(100+i) + ".0/24 via 10.0.109.1")
+        net['BWCLOUD'].cmd("ip route add 10.0."+ str(200+i) + ".0/24 via 10.0.109.1")
+        net['BWCLOUD'].cmd("ip route add 10.0."+ str(0+i) + ".0/24 via 10.0.109.1")
+
+        net['SCC_S1'].cmd("ip route add 10.1."+ str(100+i) + ".0/24 via 10.1.100.1")
+        net['SCC_S1'].cmd("ip route add 10.1."+ str(200+i) + ".0/24 via 10.1.100.1")
+        net['SCC_S1'].cmd("ip route add 10.1."+ str(0+i) + ".0/24 via 10.1.100.1")  
+
+        net['CAMPUS_S'].cmd("ip route add 10.1."+ str(100+i) + ".0/24 via 10.1.101.1")  
+        net['CAMPUS_S'].cmd("ip route add 10.1."+ str(200+i) + ".0/24 via 10.1.101.1") 
+        net['CAMPUS_S'].cmd("ip route add 10.1."+ str(0+i) + ".0/24 via 10.1.101.1") 
+    
+        net['VM'].cmd("ip route add 10.1."+ str(100+i) + ".0/24 via 10.1.105.1")
+        net['VM'].cmd("ip route add 10.1."+ str(200+i) + ".0/24 via 10.1.105.1")
+        net['VM'].cmd("ip route add 10.1."+ str(0+i) + ".0/24 via 10.1.105.1")
+
+        net['SCC_S2'].cmd("ip route add 10.1."+ str(100+i) + ".0/24 via 10.1.109.1")
+        net['SCC_S2'].cmd("ip route add 10.1."+ str(200+i) + ".0/24 via 10.1.109.1")
+        net['SCC_S2'].cmd("ip route add 10.1."+ str(0+i) + ".0/24 via 10.1.109.1")
 
 
-    net['s2'].cmd('ip route add default via 10.0.101.1')
-    net['s2'].cmd('ip route add 10.0.100.0/24 via 10.0.101.1')
-    net['s2'].cmd('ip route add 10.0.101.0/24 via 10.0.101.1')
-    net['s2'].cmd('ip route add 10.0.102.0/24 via 10.0.101.1')
+    #Example for routing 
+    #net['s1'].cmd('ip route add default via 10.0.100.1')
+    #net['s1'].cmd('ip route add 10.0.100.0/24 via 10.0.100.1')
+    #net['s1'].cmd('ip route add 10.0.101.0/24 via 10.0.100.1')
 
-    net['s2'].cmd('ip route add 10.0.0.0/24 via 10.0.101.1')
-    net['s2'].cmd('ip route add 10.0.1.0/24 via 10.0.101.1')
-    net['s2'].cmd('ip route add 10.0.2.0/24 via 10.0.101.1')
-    net['s2'].cmd('ip route add 10.0.3.0/24 via 10.0.101.1')
+    #net['s1'].cmd('ip route add 10.0.0.0/24 via 10.0.100.1')
+    #net['s1'].cmd('ip route add 10.0.1.0/24 via 10.0.100.1')
 
-    net['s2'].cmd('ip route add 10.0.201.0/24 via 10.0.101.1')
-    net['s2'].cmd('ip route add 10.0.202.0/24 via 10.0.101.1')
-    net['s2'].cmd('ip route add 10.0.203.0/24 via 10.0.101.1')
-    net['s2'].cmd('ip route add 10.0.204.0/24 via 10.0.101.1')
+
+    #net['s1'].cmd('ip route add 10.0.201.0/24 via 10.0.100.1')
+    #net['s1'].cmd('ip route add 10.0.202.0/24 via 10.0.100.1')
+
+
+
+    #net['s2'].cmd('ip route add default via 10.0.101.1')
+    #net['s2'].cmd('ip route add 10.0.100.0/24 via 10.0.101.1')
+    #net['s2'].cmd('ip route add 10.0.101.0/24 via 10.0.101.1')
+
+    #net['s2'].cmd('ip route add 10.0.0.0/24 via 10.0.101.1')
+    #net['s2'].cmd('ip route add 10.0.1.0/24 via 10.0.101.1')
+    #net['s2'].cmd('ip route add 10.0.2.0/24 via 10.0.101.1')
+
+    #net['s2'].cmd('ip route add 10.0.201.0/24 via 10.0.101.1')
+    #net['s2'].cmd('ip route add 10.0.202.0/24 via 10.0.101.1')
+    #net['s2'].cmd('ip route add 10.0.203.0/24 via 10.0.101.1')
 
 
 
