@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+authors:
+- family-names: "Treichel"
+  given-names: "Nils"
+- family-names: "Boychev"
+  given-names: "Iliyan"
+title: "Projektarbeit"
+version: 1.0.0
+date-released: 2025-01-19
+url: "https://github.com/Nils7698/Projektarbeit"
