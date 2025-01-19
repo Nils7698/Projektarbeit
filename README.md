@@ -5,8 +5,7 @@
 ### TODOS
 - [x] Configure routing in Spine North
 - [x] Configure routing in Spine South
-- [ ] Configure routing between the spines (optional)
-- [ ] Add clients
+- [x] Add KIT Services
 - [ ] look what metrics we can collect
 - [ ] Create networking scenarios
 - [ ] execute the scenarios and save data
