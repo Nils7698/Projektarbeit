@@ -10,6 +10,8 @@ import os
 # clears Mininet cache
 os.system("sudo mn -c")
 
+stddelay = '3ms'
+stdQueueSize = 13333333 # max queue size is in packets, so 1500 Byte (MTU) * 13333333 = 20 GB
 hosts = []
 
 class MyTopo(Topo):
@@ -20,8 +22,8 @@ class MyTopo(Topo):
         Spine_South = self.addHost('SS')
 
         # Leafs for North and South
-        self.leafs_north = [f'LN{i+1}' for i in range(10)]
-        self.leafs_south = [f'LS{i+1}' for i in range(10)]
+        self.leafs_north = [f'LN{i+1}' for i in range(16)]
+        self.leafs_south = [f'LS{i+1}' for i in range(13)]
 
         # Create Leafs and routers, and connect them to Spine switches
         # Leaf name convention: LN1R1, LS2R1, ..., LN10R1 (Leaf (North | South) [number] Router (1|2))
@@ -33,45 +35,45 @@ class MyTopo(Topo):
         for i, leaf in enumerate(self.leafs_north):
             router1 = self.addHost(f'{leaf}R1')
             router2 = self.addHost(f'{leaf}R2')
-            self.addLink(router1, router2, intfName1=f'{leaf}R1-eth2', intfName2=f'{leaf}R2-eth2')
-            self.addLink(router1, Spine_North, intfName1=f'{leaf}R1-eth3', intfName2='SN-eth' + str(interfaceIterator))
+            self.addLink(router1, router2, intfName1=f'{leaf}R1-eth2', intfName2=f'{leaf}R2-eth2', delay = stddelay, max_queue_size = stdQueueSize)
+            self.addLink(router1, Spine_North, intfName1=f'{leaf}R1-eth3', intfName2='SN-eth' + str(interfaceIterator), delay = stddelay, max_queue_size = stdQueueSize)
             interfaceIterator += 1
-            self.addLink(router2, Spine_North, intfName1=f'{leaf}R2-eth3', intfName2='SN-eth' + str(interfaceIterator))
+            self.addLink(router2, Spine_North, intfName1=f'{leaf}R2-eth3', intfName2='SN-eth' + str(interfaceIterator), delay = stddelay, max_queue_size = stdQueueSize)
             interfaceIterator += 1
             #create a switch for each leaf and connect to R1
             self.addSwitch(f'{leaf}SW')
-            self.addLink(f'{leaf}SW', f'{leaf}R1', intfName2 = f'{leaf}R1-eth1')
+            self.addLink(f'{leaf}SW', f'{leaf}R1', intfName2 = f'{leaf}R1-eth1', delay = stddelay, max_queue_size = stdQueueSize)
 
         interfaceIterator = 1
         for i, leaf in enumerate(self.leafs_south):
             router1 = self.addHost(f'{leaf}R1')
             router2 = self.addHost(f'{leaf}R2')
-            self.addLink(router1, router2, intfName1=f'{leaf}R1-eth2', intfName2=f'{leaf}R2-eth2')
-            self.addLink(router1, Spine_South, intfName1=f'{leaf}R1-eth3', intfName2='SS-eth' + str(interfaceIterator))
+            self.addLink(router1, router2, intfName1=f'{leaf}R1-eth2', intfName2=f'{leaf}R2-eth2', delay = stddelay, max_queue_size = stdQueueSize)
+            self.addLink(router1, Spine_South, intfName1=f'{leaf}R1-eth3', intfName2='SS-eth' + str(interfaceIterator), delay = stddelay, max_queue_size = stdQueueSize)
             interfaceIterator += 1
-            self.addLink(router2, Spine_South, intfName1=f'{leaf}R2-eth3', intfName2='SS-eth' + str(interfaceIterator))
+            self.addLink(router2, Spine_South, intfName1=f'{leaf}R2-eth3', intfName2='SS-eth' + str(interfaceIterator), delay = stddelay, max_queue_size = stdQueueSize)
             interfaceIterator += 1
             #create a switch for each leaf and connect to R1
             self.addSwitch(f'{leaf}SW')
-            self.addLink(f'{leaf}SW', f'{leaf}R1', intfName2 = f'{leaf}R1-eth1')
+            self.addLink(f'{leaf}SW', f'{leaf}R1', intfName2 = f'{leaf}R1-eth1', delay = stddelay, max_queue_size = stdQueueSize)
 
 
         #add clients and servers
 
         def addClient(name, ip, linkedSwitch):
             client = self.addHost(name, ip=ip)
-            self.addLink(client, linkedSwitch)
+            self.addLink(client, linkedSwitch, delay = stddelay)
             hosts.append(client)
             return client
 
 
-        
+        #Static Services North
         addClient('SCC_N1', '10.0.100.200/24', 'LN1SW')
         addClient('CAMPUS_N', '10.0.101.200/24', 'LN2SW')
         addClient('LSDF', '10.0.102.200/24', 'LN3SW')
         addClient('FILE', '10.0.105.200/24', 'LN6SW')
-        addClient('SCC_N2', '10.0.107.200/24', 'LN8SW')
-        addClient('BWCLOUD', '10.0.109.200/24', 'LN10SW')
+        addClient('SCC_N2', '10.0.109.200/24', 'LN10SW')
+        addClient('BWCLOUD', '10.0.113.200/24', 'LN14SW')
 
         #Static Services South
         addClient('SCC_S1', '10.1.100.200/24', 'LS1SW')
@@ -126,7 +128,7 @@ def configure_routes(net):
 
     #IP configuration for Spine switches 10 for 10 leafs each spine. *2 because each leaf has 2 routers
     iterator = 1
-    for i in range(10*2):
+    for i in range(16*2):
         ipNet = 200 + iterator
         net['SN'].cmd("ifconfig SN-eth" + str(i+1) + " 10.0." + str(ipNet) + "." + "254" + "/24")
         net['SS'].cmd("ifconfig SS-eth" + str(i+1) + " 10.1." + str(ipNet) + "." + "254" + "/24")
@@ -144,33 +146,39 @@ def configure_routes(net):
         router1 = net.get(f'{leaf}R1')
         router2 = net.get(f'{leaf}R2')
         #Routing for R1
-        for i in range(0,10):
+        if NorthSouthID == 0:
+            rangeNo = 16
+        else:
+            rangeNo = 13
+        for i in range(0,rangeNo):
             if i == subnetNo:
                 continue
             #Route to Subnet
             router1.cmd("ip route add 10." + str(NorthSouthID) + "."+ str(i) + ".0/24 via 10." + str(NorthSouthID) + "." + str(201+2*subnetNo) + ".254")
             router2.cmd("ip route add 10." + str(NorthSouthID) + "." + str(i) + ".0/24 via 10." + str(NorthSouthID) + "." + str(201+2*subnetNo+1) + ".254")
-        for i in range(0,10):
+        for i in range(0,rangeNo):
             #Route to Spine
             router1.cmd("ip route add 10." + str(NorthSouthID) + "." + str(201+i) + ".0/24 via 10." + str(NorthSouthID) + "." + str(201+2*subnetNo) + ".254")
             router2.cmd("ip route add 10." + str(NorthSouthID) + "." + str(201+i) + ".0/24 via 10." + str(NorthSouthID) + "." + str(201+2*subnetNo+1) + ".254")
-        for i in range(0,10):
+        for i in range(0,rangeNo):
             #Route to Clients/Servers
             router1.cmd("ip route add 10." + str(NorthSouthID) + "." + str(100+i) + ".0/24 via 10." + str(NorthSouthID) + "." + str(201+2*subnetNo) + ".254")
             router2.cmd("ip route add 10." + str(NorthSouthID) + "." + str(100+i) + ".0/24 via 10." + str(NorthSouthID) + "." + str(201+2*subnetNo+1) + ".254")
 
     def addStaticRoutesSpine():
-        for i in range(0,10):
+        for i in range(0,16):
             net['SN'].cmd("ip route add 10.0."+ str(i) + ".0/24 via 10.0." + str(201+2*i) + ".1")
-            net['SS'].cmd("ip route add 10.1."+ str(i) + ".0/24 via 10.1." + str(201+2*i) + ".1")
-
             net['SN'].cmd("ip route add 10.0."+ str(100+i) + ".0/24 via 10.0." + str(201+2*i) + ".1")
+            
+        for i in range(0,13):
+            net['SS'].cmd("ip route add 10.1."+ str(i) + ".0/24 via 10.1." + str(201+2*i) + ".1")
             net['SS'].cmd("ip route add 10.1."+ str(100+i) + ".0/24 via 10.1." + str(201+2*i) + ".1")
 
 
-
-    for i in range(10):
+    for i in range(16):
         addStaticRoutesToRouters(f'LN{i+1}', i, 0)
+ 
+    for i in range(13):
         addStaticRoutesToRouters(f'LS{i+1}', i, 1)
    
 
@@ -178,7 +186,7 @@ def configure_routes(net):
 
     #Client/Server Routing
 
-    for i in range(0,10):
+    for i in range(0,16):
         net['SCC_N1'].cmd("ip route add 10.0."+ str(100+i) + ".0/24 via 10.0.100.1")
         net['SCC_N1'].cmd("ip route add 10.0."+ str(200+i) + ".0/24 via 10.0.100.1")
         net['SCC_N1'].cmd("ip route add 10.0."+ str(0+i) + ".0/24 via 10.0.100.1")
