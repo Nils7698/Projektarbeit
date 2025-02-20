@@ -80,6 +80,17 @@ class MyTopo(Topo):
         addClient('CAMPUS_S', '10.1.101.200/24', 'LS2SW')
         addClient('VM', '10.1.105.200/24', 'LS6SW')
         addClient('SCC_S2', '10.1.109.200/24', 'LS10SW')
+
+        #Clients
+        for i in range(3):
+            addClient(f'LN2C{i+1}', f'10.0.101.{10+i+1}/24', 'LN2SW')
+            addClient(f'LN9C{i+1}', f'10.0.108.{10+i+1}/24', 'LN9SW')
+            addClient(f'LN12C{i+1}', f'10.0.111.{10+i+1}/24', 'LN12SW')
+
+            addClient(f'LS2C{i+1}', f'10.1.101.{10+i+1}/24', 'LS2SW')
+            addClient(f'LS8C{i+1}', f'10.1.107.{10+i+1}/24', 'LS8SW')
+            addClient(f'LS9C{i+1}', f'10.1.108.{10+i+1}/24', 'LS9SW')
+            addClient(f'LS12C{i+1}', f'10.1.111.{10+i+1}/24', 'LS12SW')
         
 
 
@@ -227,37 +238,49 @@ def configure_routes(net):
         net['SCC_S2'].cmd("ip route add 10.1."+ str(200+i) + ".0/24 via 10.1.109.1")
         net['SCC_S2'].cmd("ip route add 10.1."+ str(0+i) + ".0/24 via 10.1.109.1")
 
+        for j in range(3):
+            net[f'LN2C{j+1}'].cmd("ip route add 10.0."+ str(100+i) + ".0/24 via 10.0.101.1")
+            net[f'LN2C{j+1}'].cmd("ip route add 10.0."+ str(200+i) + ".0/24 via 10.0.101.1")
+            net[f'LN2C{j+1}'].cmd("ip route add 10.0."+ str(0+i) + ".0/24 via 10.0.101.1")
 
-    #Example for routing 
-    #net['s1'].cmd('ip route add default via 10.0.100.1')
-    #net['s1'].cmd('ip route add 10.0.100.0/24 via 10.0.100.1')
-    #net['s1'].cmd('ip route add 10.0.101.0/24 via 10.0.100.1')
+            net[f'LN9C{j+1}'].cmd("ip route add 10.0."+ str(100+i) + ".0/24 via 10.0.108.1")
+            net[f'LN9C{j+1}'].cmd("ip route add 10.0."+ str(200+i) + ".0/24 via 10.0.108.1")
+            net[f'LN9C{j+1}'].cmd("ip route add 10.0."+ str(0+i) + ".0/24 via 10.0.108.1")
 
-    #net['s1'].cmd('ip route add 10.0.0.0/24 via 10.0.100.1')
-    #net['s1'].cmd('ip route add 10.0.1.0/24 via 10.0.100.1')
+            net[f'LN12C{j+1}'].cmd("ip route add 10.0."+ str(100+i) + ".0/24 via 10.0.111.1")
+            net[f'LN12C{j+1}'].cmd("ip route add 10.0."+ str(200+i) + ".0/24 via 10.0.111.1")
+            net[f'LN12C{j+1}'].cmd("ip route add 10.0."+ str(0+i) + ".0/24 via 10.0.111.1")
 
+            net[f'LS2C{j+1}'].cmd("ip route add 10.1."+ str(100+i) + ".0/24 via 10.1.101.1")
+            net[f'LS2C{j+1}'].cmd("ip route add 10.1."+ str(200+i) + ".0/24 via 10.1.101.1")
+            net[f'LS2C{j+1}'].cmd("ip route add 10.1."+ str(0+i) + ".0/24 via 10.1.101.1")
 
-    #net['s1'].cmd('ip route add 10.0.201.0/24 via 10.0.100.1')
-    #net['s1'].cmd('ip route add 10.0.202.0/24 via 10.0.100.1')
+            net[f'LS8C{j+1}'].cmd("ip route add 10.1."+ str(100+i) + ".0/24 via 10.1.107.1")
+            net[f'LS8C{j+1}'].cmd("ip route add 10.1."+ str(200+i) + ".0/24 via 10.1.107.1")
+            net[f'LS8C{j+1}'].cmd("ip route add 10.1."+ str(0+i) + ".0/24 via 10.1.107.1")
 
+            net[f'LS9C{j+1}'].cmd("ip route add 10.1."+ str(100+i) + ".0/24 via 10.1.108.1")
+            net[f'LS9C{j+1}'].cmd("ip route add 10.1."+ str(200+i) + ".0/24 via 10.1.108.1")
+            net[f'LS9C{j+1}'].cmd("ip route add 10.1."+ str(0+i) + ".0/24 via 10.1.108.1")
 
+            net[f'LS12C{j+1}'].cmd("ip route add 10.1."+ str(100+i) + ".0/24 via 10.1.111.1")
+            net[f'LS12C{j+1}'].cmd("ip route add 10.1."+ str(200+i) + ".0/24 via 10.1.111.1")
+            net[f'LS12C{j+1}'].cmd("ip route add 10.1."+ str(0+i) + ".0/24 via 10.1.111.1")
 
-    #net['s2'].cmd('ip route add default via 10.0.101.1')
-    #net['s2'].cmd('ip route add 10.0.100.0/24 via 10.0.101.1')
-    #net['s2'].cmd('ip route add 10.0.101.0/24 via 10.0.101.1')
+    # Start IPerf Servers for all static services
+    net['SCC_N1'].cmd("iperf3 -s -p 5201 &")
+    net['CAMPUS_N'].cmd("iperf3 -s -p 5201 &")
+    net['LSDF'].cmd("iperf3 -s -p 5201 &")
+    net['FILE'].cmd("iperf3 -s -p 5201 &")
+    net['SCC_N2'].cmd("iperf3 -s -p 5201 &")
+    net['BWCLOUD'].cmd("iperf3 -s -p 5201 &")
+    net['SCC_S1'].cmd("iperf3 -s -p 5201 &")
+    net['CAMPUS_S'].cmd("iperf3 -s -p 5201 &")
+    net['VM'].cmd("iperf3 -s -p 5201 &")
+    net['SCC_S2'].cmd("iperf3 -s -p 5201 &")
 
-    #net['s2'].cmd('ip route add 10.0.0.0/24 via 10.0.101.1')
-    #net['s2'].cmd('ip route add 10.0.1.0/24 via 10.0.101.1')
-    #net['s2'].cmd('ip route add 10.0.2.0/24 via 10.0.101.1')
-
-    #net['s2'].cmd('ip route add 10.0.201.0/24 via 10.0.101.1')
-    #net['s2'].cmd('ip route add 10.0.202.0/24 via 10.0.101.1')
-    #net['s2'].cmd('ip route add 10.0.203.0/24 via 10.0.101.1')
-
-
-
-
-
+    # Command: LN2C1 iperf3 -c SCC_N1 -p 5201 -t 60 -P 5 | tee results.csv
+    # [CLIENT] iperf 3 -c [SERVER] -p [PORT] -t [TIME] -P [PARALLEL CONNECTIONS] | tee [OUTPUT FILE]
 
 def nettopo(**kwargs):
     topo = MyTopo()
