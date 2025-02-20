@@ -12,6 +12,8 @@ os.system("sudo mn -c")
 
 stddelay = '3ms'
 stdQueueSize = 13333333 # max queue size is in packets, so 1500 Byte (MTU) * 13333333 = 20 GB
+stdbw= '100'
+numberOfClients = 3
 hosts = []
 
 class MyTopo(Topo):
@@ -82,7 +84,7 @@ class MyTopo(Topo):
         addClient('SCC_S2', '10.1.109.200/24', 'LS10SW')
 
         #Clients
-        for i in range(3):
+        for i in range(numberOfClients):
             addClient(f'LN2C{i+1}', f'10.0.101.{10+i+1}/24', 'LN2SW')
             addClient(f'LN9C{i+1}', f'10.0.108.{10+i+1}/24', 'LN9SW')
             addClient(f'LN12C{i+1}', f'10.0.111.{10+i+1}/24', 'LN12SW')
@@ -238,7 +240,7 @@ def configure_routes(net):
         net['SCC_S2'].cmd("ip route add 10.1."+ str(200+i) + ".0/24 via 10.1.109.1")
         net['SCC_S2'].cmd("ip route add 10.1."+ str(0+i) + ".0/24 via 10.1.109.1")
 
-        for j in range(3):
+        for j in range(numberOfClients):
             net[f'LN2C{j+1}'].cmd("ip route add 10.0."+ str(100+i) + ".0/24 via 10.0.101.1")
             net[f'LN2C{j+1}'].cmd("ip route add 10.0."+ str(200+i) + ".0/24 via 10.0.101.1")
             net[f'LN2C{j+1}'].cmd("ip route add 10.0."+ str(0+i) + ".0/24 via 10.0.101.1")
