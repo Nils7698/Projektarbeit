@@ -281,8 +281,13 @@ def configure_routes(net):
     net['VM'].cmd("iperf3 -s -p 5201 &")
     net['SCC_S2'].cmd("iperf3 -s -p 5201 &")
 
-    # Command: LN2C1 iperf3 -c SCC_N1 -p 5201 -t 60 -P 5 | tee results.csv
+    # Command (Bitrate/Throughput, Cwnd): LN2C1 iperf3 -c SCC_N1 -p 5201 -t 60 -P 5 | tee results.csv
     # [CLIENT] iperf 3 -c [SERVER] -p [PORT] -t [TIME] -P [PARALLEL CONNECTIONS] | tee [OUTPUT FILE]
+
+    # Command (RTT min/avg/max/mdev): LN2C1 ping -c 10 SCC_N1 > rtt_log.txt
+
+    # Command (Congestion Control Type): SCC_N1 sysctl net.ipv4.tcp_congestion_control
+    # Zum ändern: sysctl -w net.ipv4.tcp_congestion_control=bbr (oder cubic, reno, etc.)
 
 def nettopo(**kwargs):
     topo = MyTopo()
