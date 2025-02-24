@@ -12,7 +12,7 @@ os.system("sudo mn -c")
 
 stddelay = '3ms'
 stdQueueSize = 13333333 # max queue size is in packets, so 1500 Byte (MTU) * 13333333 = 20 GB
-stdbw= '100'
+stdbw= '100' # in MBit/s, max 1000 MBit/s 
 numberOfClients = 3
 hosts = []
 
@@ -281,13 +281,20 @@ def configure_routes(net):
     net['VM'].cmd("iperf3 -s -p 5201 &")
     net['SCC_S2'].cmd("iperf3 -s -p 5201 &")
 
+
     # Command (Bitrate/Throughput, Cwnd): LN2C1 iperf3 -c SCC_N1 -p 5201 -t 60 -P 5 | tee results.csv
     # [CLIENT] iperf 3 -c [SERVER] -p [PORT] -t [TIME] -P [PARALLEL CONNECTIONS] | tee [OUTPUT FILE]
+    # Additional parameter -b 100M : Bandwidth 100M
 
     # Command (RTT min/avg/max/mdev): LN2C1 ping -c 10 SCC_N1 > rtt_log.txt
 
     # Command (Congestion Control Type): SCC_N1 sysctl net.ipv4.tcp_congestion_control
     # Zum ändern: sysctl -w net.ipv4.tcp_congestion_control=bbr (oder cubic, reno, etc.)
+
+    # Command (Queue Size): SCC_N1 tc -s qdisc show 
+    # tc -s qdisc show 
+
+
 
 def nettopo(**kwargs):
     topo = MyTopo()
@@ -298,5 +305,6 @@ if __name__ == '__main__':
     net = nettopo()
     net.start()
     configure_routes(net)
+    print("Number of Clients: ", numberOfClients * 7)
     CLI(net)
     net.stop()
