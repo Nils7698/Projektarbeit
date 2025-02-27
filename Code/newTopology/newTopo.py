@@ -63,11 +63,6 @@ class MyTopo(Topo):
                                  switches[self.leafs_north[down_id]], 
                                  bw=stdbw, delay=stddelay)
 
-                # TEST: Attach a host to each switch
-                host = self.addHost(f'h{switch_id+1}')
-                self.addLink(host, switches[self.leafs_north[switch_id]], 
-                             bw=stdbw, delay=stddelay)
-
 
         def addClient(name, linkedSwitch):
             client = self.addHost(name)
@@ -81,6 +76,19 @@ class MyTopo(Topo):
         FILE = addClient('FILE', switches['LN6'])
         SCC_N2 = addClient('SCC_N2', switches['LN9'])
         BWCLOUD = addClient('BWCLOUD', switches['LN14'])
+
+
+        def addHostsToLeaf(leaf_name, num_hosts):
+            for i in range(num_hosts):
+                host_name = f"{leaf_name}C{i+1}"
+                host = self.addHost(host_name)
+                self.addLink(host, switches[leaf_name], bw=stdbw, delay=stddelay)
+
+
+        # Add Clients
+        addHostsToLeaf("LN2", 3)
+        addHostsToLeaf("LN8", 3)
+        addHostsToLeaf("LN12", 3)
         
 
 
