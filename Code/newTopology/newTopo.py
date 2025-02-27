@@ -22,7 +22,7 @@ LN13 --  LN14 --   LN15 --   LN16
 For the new topology we use the Ryu network controller that needs to be installed on the system.
 The controller is started in a new terminal with the following command:
 
-ryu-manager ryu_multipath.py
+ryu-manager --observe-links ryu_multipath.py
 
 the ryu_multipath.py is from https://github.com/wildan2711/multipath // https://wildanmsyah.wordpress.com/2018/01/21/testing-ryu-multipath-routing-with-load-balancing-on-mininet/
 '''
@@ -68,6 +68,20 @@ class MyTopo(Topo):
                 self.addLink(host, switches[self.leafs_north[switch_id]], 
                              bw=stdbw, delay=stddelay)
 
+
+        def addClient(name, linkedSwitch):
+            client = self.addHost(name)
+            self.addLink(client, linkedSwitch, bw=stdbw, delay=stddelay)
+            return client
+        
+        # Add static services
+        SCC_N1 = addClient('SCC_N1', switches['LN1'])
+        CAMPUS_N = addClient('CAMPUS_N', switches['LN2'])
+        LSDF = addClient('LSDF', switches['LN3'])
+        FILE = addClient('FILE', switches['LN6'])
+        SCC_N2 = addClient('SCC_N2', switches['LN9'])
+        BWCLOUD = addClient('BWCLOUD', switches['LN14'])
+        
 
 
 def nettopo(**kwargs):
