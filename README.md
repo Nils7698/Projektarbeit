@@ -6,6 +6,14 @@
 - [x] Configure routing in Spine North
 - [x] Configure routing in Spine South
 - [x] Add KIT Services
-- [ ] look what metrics we can collect
+- [x] look what metrics we can collect
+- [ ] create new, complex topology
 - [ ] Create networking scenarios
 - [ ] execute the scenarios and save data
+
+____________________
+
+### How To:
+In the 'Code' Folder the topology_v3.py is the latest KIT network topology.
+
+In the newTopology folder is our new, complex topology with a SDN controller
