@@ -21,18 +21,16 @@ LN13 --  LN14 --   LN15 --   LN16
 '''
 For the new topology we use the Ryu network controller that needs to be installed on the system.
 The controller is started in a new terminal with the following command:
+
 ryu-manager ryu_multipath.py
 
 the ryu_multipath.py is from https://github.com/wildan2711/multipath // https://wildanmsyah.wordpress.com/2018/01/21/testing-ryu-multipath-routing-with-load-balancing-on-mininet/
 '''
 
 
-# Command in new terminal: ryu-manager ryu.app.simple_switch
-
 stddelay = '3ms'
 stdQueueSize = 13333333 # max queue size is in packets, so 1500 Byte (MTU) * 13333333 = 20 GB
 stdbw= 100 # in MBit/s, max 1000 MBit/s
-size = 4 
 
 class MyTopo(Topo):
     def __init__(self):
