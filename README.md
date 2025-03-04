@@ -7,7 +7,7 @@
 - [x] Configure routing in Spine South
 - [x] Add KIT Services
 - [x] look what metrics we can collect
-- [ ] create new, complex topology
+- [x] create new, complex topology
 - [ ] Create networking scenarios
 - [ ] execute the scenarios and save data
 

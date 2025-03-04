@@ -23,6 +23,13 @@ import os
 import random
 import time
 
+
+'''
+ryu_multipath.py is taken from 
+https://github.com/wildan2711/multipath // https://wildanmsyah.wordpress.com/2018/01/21/testing-ryu-multipath-routing-with-load-balancing-on-mininet/
+'''
+
+
 # Cisco Reference bandwidth = 1 Gbps
 REFERENCE_BW = 10000000
 
