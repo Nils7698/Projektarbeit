@@ -10,9 +10,17 @@ import os
 # clears Mininet cache
 os.system("sudo mn -c")
 
-stddelay = '3ms'
-stdQueueSize = 13333333 # max queue size is in packets, so 1500 Byte (MTU) * 13333333 = 20 GB
-stdbw= '100' # in MBit/s, max 1000 MBit/s 
+'''
+Scaling: factor 3000
+60.000 users -> 20
+100Gbit bw -> 33Mbit/s
+13333333 packets -> 4444 packets
+'''
+
+
+stddelay = '2ms'
+stdQueueSize = 4444 # max queue size is in packets, so 1500 Byte (MTU) * 13333333 = 20 GB
+stdbw= 33 # in MBit/s, max 1000 MBit/s 
 numberOfClients = 3
 hosts = []
 
@@ -37,34 +45,34 @@ class MyTopo(Topo):
         for i, leaf in enumerate(self.leafs_north):
             router1 = self.addHost(f'{leaf}R1')
             router2 = self.addHost(f'{leaf}R2')
-            self.addLink(router1, router2, intfName1=f'{leaf}R1-eth2', intfName2=f'{leaf}R2-eth2', delay = stddelay, max_queue_size = stdQueueSize)
-            self.addLink(router1, Spine_North, intfName1=f'{leaf}R1-eth3', intfName2='SN-eth' + str(interfaceIterator), delay = stddelay, max_queue_size = stdQueueSize)
+            self.addLink(router1, router2, intfName1=f'{leaf}R1-eth2', intfName2=f'{leaf}R2-eth2', delay = stddelay, max_queue_size = stdQueueSize, bw=stdbw)
+            self.addLink(router1, Spine_North, intfName1=f'{leaf}R1-eth3', intfName2='SN-eth' + str(interfaceIterator), delay = stddelay, max_queue_size = stdQueueSize, bw=stdbw)
             interfaceIterator += 1
-            self.addLink(router2, Spine_North, intfName1=f'{leaf}R2-eth3', intfName2='SN-eth' + str(interfaceIterator), delay = stddelay, max_queue_size = stdQueueSize)
+            self.addLink(router2, Spine_North, intfName1=f'{leaf}R2-eth3', intfName2='SN-eth' + str(interfaceIterator), delay = stddelay, max_queue_size = stdQueueSize, bw=stdbw)
             interfaceIterator += 1
             #create a switch for each leaf and connect to R1
             self.addSwitch(f'{leaf}SW')
-            self.addLink(f'{leaf}SW', f'{leaf}R1', intfName2 = f'{leaf}R1-eth1', delay = stddelay, max_queue_size = stdQueueSize)
+            self.addLink(f'{leaf}SW', f'{leaf}R1', intfName2 = f'{leaf}R1-eth1', delay = stddelay, max_queue_size = stdQueueSize, bw=stdbw)
 
         interfaceIterator = 1
         for i, leaf in enumerate(self.leafs_south):
             router1 = self.addHost(f'{leaf}R1')
             router2 = self.addHost(f'{leaf}R2')
-            self.addLink(router1, router2, intfName1=f'{leaf}R1-eth2', intfName2=f'{leaf}R2-eth2', delay = stddelay, max_queue_size = stdQueueSize)
-            self.addLink(router1, Spine_South, intfName1=f'{leaf}R1-eth3', intfName2='SS-eth' + str(interfaceIterator), delay = stddelay, max_queue_size = stdQueueSize)
+            self.addLink(router1, router2, intfName1=f'{leaf}R1-eth2', intfName2=f'{leaf}R2-eth2', delay = stddelay, max_queue_size = stdQueueSize, bw=stdbw)
+            self.addLink(router1, Spine_South, intfName1=f'{leaf}R1-eth3', intfName2='SS-eth' + str(interfaceIterator), delay = stddelay, max_queue_size = stdQueueSize, bw=stdbw)
             interfaceIterator += 1
-            self.addLink(router2, Spine_South, intfName1=f'{leaf}R2-eth3', intfName2='SS-eth' + str(interfaceIterator), delay = stddelay, max_queue_size = stdQueueSize)
+            self.addLink(router2, Spine_South, intfName1=f'{leaf}R2-eth3', intfName2='SS-eth' + str(interfaceIterator), delay = stddelay, max_queue_size = stdQueueSize, bw=stdbw)
             interfaceIterator += 1
             #create a switch for each leaf and connect to R1
             self.addSwitch(f'{leaf}SW')
-            self.addLink(f'{leaf}SW', f'{leaf}R1', intfName2 = f'{leaf}R1-eth1', delay = stddelay, max_queue_size = stdQueueSize)
+            self.addLink(f'{leaf}SW', f'{leaf}R1', intfName2 = f'{leaf}R1-eth1', delay = stddelay, max_queue_size = stdQueueSize, bw=stdbw)
 
 
         #add clients and servers
 
         def addClient(name, ip, linkedSwitch):
             client = self.addHost(name, ip=ip)
-            self.addLink(client, linkedSwitch, delay = stddelay)
+            self.addLink(client, linkedSwitch, delay = stddelay, bw=stdbw)
             hosts.append(client)
             return client
 
@@ -216,13 +224,13 @@ def configure_routes(net):
         net['FILE'].cmd("ip route add 10.0."+ str(200+i) + ".0/24 via 10.0.105.1")
         net['FILE'].cmd("ip route add 10.0."+ str(0+i) + ".0/24 via 10.0.105.1")
 
-        net['SCC_N2'].cmd("ip route add 10.0."+ str(100+i) + ".0/24 via 10.0.107.1")
-        net['SCC_N2'].cmd("ip route add 10.0."+ str(200+i) + ".0/24 via 10.0.107.1")
-        net['SCC_N2'].cmd("ip route add 10.0."+ str(0+i) + ".0/24 via 10.0.107.1")
+        net['SCC_N2'].cmd("ip route add 10.0."+ str(100+i) + ".0/24 via 10.0.109.1")
+        net['SCC_N2'].cmd("ip route add 10.0."+ str(200+i) + ".0/24 via 10.0.109.1")
+        net['SCC_N2'].cmd("ip route add 10.0."+ str(0+i) + ".0/24 via 10.0.109.1")
         
-        net['BWCLOUD'].cmd("ip route add 10.0."+ str(100+i) + ".0/24 via 10.0.109.1")
-        net['BWCLOUD'].cmd("ip route add 10.0."+ str(200+i) + ".0/24 via 10.0.109.1")
-        net['BWCLOUD'].cmd("ip route add 10.0."+ str(0+i) + ".0/24 via 10.0.109.1")
+        net['BWCLOUD'].cmd("ip route add 10.0."+ str(100+i) + ".0/24 via 10.0.113.1")
+        net['BWCLOUD'].cmd("ip route add 10.0."+ str(200+i) + ".0/24 via 10.0.113.1")
+        net['BWCLOUD'].cmd("ip route add 10.0."+ str(0+i) + ".0/24 via 10.0.113.1")
 
         net['SCC_S1'].cmd("ip route add 10.1."+ str(100+i) + ".0/24 via 10.1.100.1")
         net['SCC_S1'].cmd("ip route add 10.1."+ str(200+i) + ".0/24 via 10.1.100.1")
@@ -282,8 +290,8 @@ def configure_routes(net):
     net['SCC_S2'].cmd("iperf3 -s -p 5201 &")
 
 
-    # Command (Bitrate/Throughput, Cwnd): LN2C1 iperf3 -c SCC_N1 -p 5201 -t 60 -P 5 | tee results.csv
-    # [CLIENT] iperf 3 -c [SERVER] -p [PORT] -t [TIME] -P [PARALLEL CONNECTIONS] | tee [OUTPUT FILE]
+    # Command (Bitrate/Throughput, Cwnd, CPU, Cong. Control Type): LN2C1 iperf3 -c SCC_N1 -p 5201 -t 60 -P 5 -V | tee results.csv
+    # [CLIENT] iperf 3 -c [SERVER] -p [PORT] -t [TIME] -P [PARALLEL CONNECTIONS] -V Verbose für mehr Infos | tee [OUTPUT FILE]
     # Additional parameter -b 100M : Bandwidth 100M
 
     # Command (RTT min/avg/max/mdev): LN2C1 ping -c 10 SCC_N1 > rtt_log.txt
