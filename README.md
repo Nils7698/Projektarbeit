@@ -14,6 +14,6 @@
 ____________________
 
 ### How To:
-In the 'Code' Folder the topology_v3.py is the latest KIT network topology.
+In the 'Code' Folder the kit_topology is the latest KIT network topology.
 
 In the newTopology folder is our new, complex topology with a SDN controller
