@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 from mininet.net import Mininet
+from mininet.node import OVSSwitch
 from mininet.cli import CLI
 from mininet.log import lg
 from mininet.topo import Topo
@@ -102,6 +103,14 @@ class MyTopo(Topo):
             addClient(f'LS9C{i+1}', f'10.1.108.{10+i+1}/24', 'LS9SW')
             addClient(f'LS12C{i+1}', f'10.1.111.{10+i+1}/24', 'LS12SW')
         
+        
+def configure_switches(net):
+    """ Sets all switches in Mininet to standalone mode """
+    
+    #DEBUG
+    print("[DEBUG] Configurating switches...")
+    for switch in net.switches:
+        switch.cmd('ovs-vsctl set-fail-mode {} standalone'.format(switch.name))
 
 
 def configure_routes(net):
@@ -306,12 +315,13 @@ def configure_routes(net):
 
 def nettopo(**kwargs):
     topo = MyTopo()
-    return Mininet(topo=topo, link=TCLink, **kwargs)
+    return Mininet(topo=topo, switch=OVSSwitch, controller=None, link=TCLink, **kwargs)
 
 if __name__ == '__main__':
     lg.setLogLevel('info')
     net = nettopo()
     net.start()
+    configure_switches(net)
     configure_routes(net)
     print("Number of Clients: ", numberOfClients * 7)
     CLI(net)
