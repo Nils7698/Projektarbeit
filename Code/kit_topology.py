@@ -299,6 +299,31 @@ def configure_routes(net):
     net['SCC_S2'].cmd("iperf3 -s -p 5201 &")
 
 
+
+    '''
+    Netzwerk Szenarios:
+    1. Backup-Welle am Abend
+
+    Jeden Abend gegen 22 Uhr starten automatisierte Backup-Prozesse auf den Endgeräten der  Mitarbeiter. Diese verbinden sich gleichzeitig mit dem zentralen Fileserver der Universität, um wichtige Dokumente und Konfigurationsdateien zu sichern.
+
+    2.  Arbeitsalltag
+
+    Während eines typischen Arbeitstages in der Universität greifen verschiedene Nutzer auf unterschiedliche Server zu:
+    Studierende verbinden sich mit dem E-Learning-System der Uni, nutzen VPN-Zugänge für Online-Datenbanken oder greifen auf den WLAN-Druckerserver zu. Dozierende und Mitarbeiter laden Vorlesungsmaterialien auf die Webserver hoch oder nutzen Remote-Desktop-Verbindungen, um sich mit Hochleistungsrechnern im Rechenzentrum zu verbinden. Forschende übertragen große Datenmengen zwischen lokalen Arbeitsplätzen und HPC-Clustern für simulationsbasierte Berechnungen.
+
+    Durch die Vielzahl gleichzeitiger Zugriffe kommt es zu stark schwankender Netzwerkauslastung über den Tag hinweg.
+
+    3. Notfall – Netzwerk-Ausfall und Failover-Test (Geht nur bei neuer Topologie weil dynamisch routing)
+
+    In einer Universität ist eine stabile Netzwerkverbindung essenziell, um Vorlesungen, Forschungsarbeiten und Verwaltungsaufgaben sicherzustellen. Doch was passiert, wenn ein zentraler Router oder ein wichtiger Link ausfällt?
+    In diesem Szenario wird simuliert, dass ein zentraler Netzwerk-Knoten (z. B. der Haupt-Router im Rechenzentrum) plötzlich ausfällt.
+    zB mit "link down" auf einem SDN-Switch einer Route und schauen was passiert.
+    
+    
+    
+    '''
+
+
     # Command (Bitrate/Throughput, Cwnd, CPU, Cong. Control Type): LN2C1 iperf3 -c SCC_N1 -p 5201 -t 60 -P 5 -V | tee results.csv
     # [CLIENT] iperf 3 -c [SERVER] -p [PORT] -t [TIME] -P [PARALLEL CONNECTIONS] -V Verbose für mehr Infos | tee [OUTPUT FILE]
     # Additional parameter -b 100M : Bandwidth 100M
