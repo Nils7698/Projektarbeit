@@ -8,7 +8,7 @@
 - [x] Add KIT Services
 - [x] look what metrics we can collect
 - [x] create new, complex topology
-- [ ] Create networking scenarios
+- [x] Create networking scenarios
 - [ ] execute the scenarios and save data
 
 ____________________
