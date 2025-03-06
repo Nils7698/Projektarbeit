@@ -21,6 +21,7 @@ Scaling: factor 3000
 '''
 
 debug = 0
+scenario_time = 60
 stddelay = '2ms'
 stdQueueSize = 4444 # max queue size is in packets, so 1500 Byte (MTU) * 13333333 = 20 GB
 stdbw= 33 # in MBit/s, max 1000 MBit/s 
@@ -307,17 +308,24 @@ def configure_routes(net):
             net[f'LS12C{j+1}'].cmd("ip route add 10.1."+ str(0+i) + ".0/24 via 10.1.111.1")
 
     # Start IPerf Servers for all static services
-    # Default port of iperf2 is 5001
-    net['SCC_N1'].cmd("iperf -s &")
-    net['CAMPUS_N'].cmd("iperf -s &")
-    net['LSDF'].cmd("iperf -s &")
-    net['FILE'].cmd("iperf -s &")
-    net['SCC_N2'].cmd("iperf -s &")
-    net['BWCLOUD'].cmd("iperf -s &")
-    net['SCC_S1'].cmd("iperf -s &")
-    net['CAMPUS_S'].cmd("iperf -s &")
-    net['VM'].cmd("iperf -s &")
-    net['SCC_S2'].cmd("iperf -s &")
+    # Default port of iperf3 is 5201
+    
+    # Because we are doing tests on Campus North only, we'll have to open more ports so that we
+    # can run multiple tests simultaneously. Iperf3 requires separate ports for each test!
+    
+    for port in range(5201, 5211):  # 9 ports for each server
+        net['SCC_N1'].cmd(f"iperf3 -s -p {port} &")
+        net['CAMPUS_N'].cmd(f"iperf3 -s -p {port} &")
+        net['LSDF'].cmd(f"iperf3 -s -p {port} &")
+        net['FILE'].cmd(f"iperf3 -s -p {port} &")
+        net['SCC_N2'].cmd(f"iperf3 -s -p {port} &")
+        net['BWCLOUD'].cmd(f"iperf3 -s -p {port} &")
+
+    
+    net['SCC_S1'].cmd("iperf3 -s &")
+    net['CAMPUS_S'].cmd("iperf3 -s &")
+    net['VM'].cmd("iperf3 -s &")
+    net['SCC_S2'].cmd("iperf3 -s &")
 
 
 
@@ -328,11 +336,14 @@ def configure_routes(net):
     1. Backup-Welle am Abend:
     Jeden Abend gegen 22 Uhr starten automatisierte Backup-Prozesse auf den Endgeräten der  Mitarbeiter. Diese verbinden sich gleichzeitig mit dem zentralen Fileserver der Universität, um wichtige Dokumente und Konfigurationsdateien zu sichern. D.h. alle Clients ---> FILE 
     '''
+    
 def scenario_backup(net, numberOfClients):
     
     print(f"[+] Initializing backup...")
     os.system("mkdir -p scenario_backup_folder")
     # To delete the folder use "sudo rm -r scenario_backup_folder"
+    
+    port = 5201 # default iperf3 port
     
     for j in range(1, numberOfClients + 1):
         clients = [f'LN2C{j}', f'LN9C{j}', f'LN12C{j}'] # Only North Campus!
@@ -344,12 +355,16 @@ def scenario_backup(net, numberOfClients):
             client = clients[i]
             
             if client in net:  # Check if client exists in the network
-                parallel_streams = random.randint(1, 10)  # Random number of parallel connections
-                bandwidth = random.choice(["20M", "100M", "300M", "600M", "1G"])  # Random bandwidth
+                parallel_streams = random.randint(1, 5)  # Random number of parallel connections
+                bandwidth = random.choice(["0.625MB", "3.25MB", "9.875MB", "19.75MB", "33MB"]) # Random bandwidth
                 
                 if debug:
-                    print(f"[DEBUG] Starting iperf from {client} to FILE server with {parallel_streams} streams and {bandwidth} bandwidth...")
-                net[client].cmd(f"iperf -c {FILE_ip} -P {parallel_streams} -b {bandwidth} -t 60 | tee scenario_backup_folder/backup_results_{client}.txt &")
+                    print(f"[DEBUG] Starting iperf3 from {client} to FILE server with {parallel_streams} streams and {bandwidth} bandwidth on port {port}...")
+                net[client].cmd(f"iperf3 -c {FILE_ip} -p {port} -P {parallel_streams} -b {bandwidth} -t {scenario_time} --json > scenario_backup_folder/backup_results_{client}.json &")
+                
+                net[client].cmd(f"ping -c {scenario_time} {FILE_ip} > scenario_backup_folder/ping_backup_results_{client}.txt &")
+                
+                port = port + 1 # Take the next free port
 
     
     '''
@@ -359,9 +374,11 @@ def scenario_backup(net, numberOfClients):
     '''
 def scenario_normal(net, numberOfClients):
 
-    print(f"[+] Initializing a simulation of average work day...")
+    print(f"[+] Initializing a simulation of an average workday...")
     os.system("mkdir -p scenario_normal_folder")
     # To delete the folder use "sudo rm -r scenario_normal_folder"
+    
+    port = 5201 # default iperf3 port
     
     # Define the list of servers for North Campus
     north_campus_servers = {
@@ -389,14 +406,16 @@ def scenario_normal(net, numberOfClients):
 
                 
                 # Randomize other parameters
-                parallel_streams = random.randint(1, 10)  # Random number of parallel connections
-                bandwidth = random.choice(["20M", "100M", "300M", "600M", "1G"])  # Random bandwidth
+                parallel_streams = random.randint(1, 5)  # Random number of parallel connections
+                bandwidth = random.choice(["0.625MB", "3.25MB", "9.875MB", "19.75MB", "33MB"])
                 
                 if debug:
-                    print(f"[DEBUG] Starting iperf from {client} to {server} server with {parallel_streams} streams and {bandwidth} bandwidth...")
+                    print(f"[DEBUG] Starting iperf3 from {client} to {server} server with {parallel_streams} streams and {bandwidth} bandwidth...")
                 
-                net[client].cmd(f"iperf -c {server_ip} -P {parallel_streams} -b {bandwidth} -t 60 | tee scenario_normal_folder/normal_results_{client}.txt &")
+                net[client].cmd(f"iperf3 -c {server_ip} -p {port} -P {parallel_streams} -b {bandwidth} -t {scenario_time} --json > scenario_normal_folder/normal_results_{client}.json &")
                 
+                net[client].cmd(f"ping -c {scenario_time} {FILE_ip} > scenario_normal_folder/ping_normal_results_{client}.txt &")
+                port = port + 1 # Take the next free port
     
     
     '''
@@ -446,11 +465,15 @@ class CustomCLI(CLI):
         if arg.strip() == "1":
             print("[+] Running scenario 'Backup-Welle am Abend'...")
             scenario_backup(self.mn, numberOfClients)
-            
+            print(f"[!] Don't terminate until simulation is over...(~{scenario_time}sec)")
+            time.sleep(scenario_time+3)
+            print("[+] Done.")
         elif arg.strip() == "2":
             print("[+] Running scenario 'Arbeitsalltag'...")
             scenario_normal(self.mn, numberOfClients)
-        
+            print(f"[!] Don't terminate until simulation is over...(~{scenario_time}sec)")
+            time.sleep(scenario_time+3)
+            print("[+] Done.")
         elif arg.strip() == "3":
             print("[+] Running scenario 'Notfall – Netzwerk-Ausfall und Failover-Test'...")
             scenario_emergency(self.mn, numberOfClients) 
