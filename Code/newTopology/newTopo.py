@@ -7,15 +7,18 @@ from mininet.node import OVSSwitch
 from mininet.log import lg
 from mininet.topo import Topo
 from mininet.link import TCLink
+import os
+import random
+import time
 
 ''' Topology (Grid):
 LN1  --  LN2  --  LN3  --  LN4  
  |        |        |        |  
 LN5  --  LN6  --  LN7  --  LN8  
  |        |        |        |  
-LN9  --  LN10 --  LN11 --  LN12  
+LN9  --  LN10 --  LN11 --   LN12  
  |        |        |        |  
-LN13 --  LN14 --   LN15 --   LN16  
+LN13 --  LN14 --   LN15 -- LN16  
 '''
 
 '''
@@ -27,10 +30,12 @@ ryu-manager --observe-links ryu_multipath.py
 the ryu_multipath.py is from https://github.com/wildan2711/multipath // https://wildanmsyah.wordpress.com/2018/01/21/testing-ryu-multipath-routing-with-load-balancing-on-mininet/
 '''
 
-
-stddelay = '3ms'
-stdQueueSize = 13333333 # max queue size is in packets, so 1500 Byte (MTU) * 13333333 = 20 GB
-stdbw= 100 # in MBit/s, max 1000 MBit/s
+debug = 0
+scenario_time = 60
+stddelay = '2ms'
+numberOfClients = 3 # default value
+stdQueueSize = 4444 # max queue size is in packets, so 1500 Byte (MTU) * 13333333 = 20 GB
+stdbw = 33 # in MBit/s, max 1000 MBit/s
 
 class MyTopo(Topo):
     def __init__(self):
@@ -78,6 +83,8 @@ class MyTopo(Topo):
         BWCLOUD = addClient('BWCLOUD', switches['LN14'])
 
 
+
+
         def addHostsToLeaf(leaf_name, num_hosts):
             for i in range(num_hosts):
                 host_name = f"{leaf_name}C{i+1}"
@@ -87,9 +94,160 @@ class MyTopo(Topo):
 
         # Add Clients
         addHostsToLeaf("LN2", 3)
-        addHostsToLeaf("LN8", 3)
+        addHostsToLeaf("LN9", 3)
         addHostsToLeaf("LN12", 3)
+
+def configure_servers(net):
+
+    for port in range(5201, 5211):  # 9 ports for each server
+        net['SCC_N1'].cmd(f"iperf3 -s -p {port} &")
+        net['CAMPUS_N'].cmd(f"iperf3 -s -p {port} &")
+        net['LSDF'].cmd(f"iperf3 -s -p {port} &")
+        net['FILE'].cmd(f"iperf3 -s -p {port} &")
+        net['SCC_N2'].cmd(f"iperf3 -s -p {port} &")
+        net['BWCLOUD'].cmd(f"iperf3 -s -p {port} &")
+
+    '''
+    Netzwerk Szenarios:
+    
+    1. Backup-Welle am Abend:
+    Jeden Abend gegen 22 Uhr starten automatisierte Backup-Prozesse auf den Endgeräten der  Mitarbeiter. Diese verbinden sich gleichzeitig mit dem zentralen Fileserver der Universität, um wichtige Dokumente und Konfigurationsdateien zu sichern. D.h. alle Clients ---> FILE 
+    '''
+
+def scenario_backup(net, numberOfClients):
+    
+    print(f"[+] Initializing backup...")
+    os.system("mkdir -p scenario_backup_folder")
+    # To delete the folder use "sudo rm -r scenario_backup_folder"
+    
+    FILE_ip = "10.0.0.3"
+    port = 5201 # default iperf3 port
+    
+    for j in range(1, numberOfClients + 1):
+        clients = [f'LN2C{j}', f'LN9C{j}', f'LN12C{j}'] # Only North Campus!
         
+        if debug:
+            print(f"[DEBUG] Processing the following clients for iteration {j}: {clients}")
+        
+        for i in range(min(numberOfClients, len(clients))):
+            client = clients[i]
+            
+            if client in net:  # Check if client exists in the network
+                parallel_streams = random.randint(1, 5)  # Random number of parallel connections
+                bandwidth = random.choice(["0.625MB", "3.25MB", "9.875MB", "19.75MB", "33MB"]) # Random bandwidth
+                
+                if debug:
+                    print(f"[DEBUG] Starting iperf3 from {client} to FILE server with {parallel_streams} streams and {bandwidth} bandwidth on port {port}...")
+                net[client].cmd(f"iperf3 -c 10.0.0.3 -p {port} -P {parallel_streams} -b {bandwidth} -t {scenario_time} --json > scenario_backup_folder/backup_results_{client}.json &")
+                
+                net[client].cmd(f"ping -c {scenario_time} 10.0.0.3 > scenario_backup_folder/ping_backup_results_{client}.txt &")
+                
+                port = port + 1 # Take the next free port
+
+    
+    '''
+    2.  Arbeitsalltag
+    Während eines typischen Arbeitstages in der Universität greifen verschiedene Nutzer auf unterschiedliche Server zu:
+    Studierende verbinden sich mit dem E-Learning-System der Uni, nutzen VPN-Zugänge für Online-Datenbanken oder greifen auf den WLAN-Druckerserver zu. Dozierende und Mitarbeiter laden Vorlesungsmaterialien auf die Webserver hoch oder nutzen Remote-Desktop-Verbindungen, um sich mit Hochleistungsrechnern im Rechenzentrum zu verbinden. Forschende übertragen große Datenmengen zwischen lokalen Arbeitsplätzen und HPC-Clustern für simulationsbasierte Berechnungen. 
+    '''
+def scenario_normal(net, numberOfClients):
+
+    print(f"[+] Initializing a simulation of an average workday...")
+    os.system("mkdir -p scenario_normal_folder")
+    # To delete the folder use "sudo rm -r scenario_normal_folder"
+    
+    port = 5201 # default iperf3 port
+    
+    # Define the list of servers for North Campus
+    north_campus_servers = {
+    "SCC_N1": SCC_N1_ip, 
+    "CAMPUS_N": CAMPUS_N_ip, 
+    "LSDF": LSDF_ip, 
+    "FILE": FILE_ip, 
+    "SCC_N2": SCC_N2_ip, 
+    "BWCLOUD": BWCLOUD_ip
+     }
+
+    
+    for j in range(1, numberOfClients + 1):
+        clients = [f'LN2C{j}', f'LN9C{j}', f'LN12C{j}'] # Only North Campus!
+        
+        if debug:
+            print(f"[DEBUG] Processing the following clients for iteration {j}: {clients}")
+        
+        for i in range(min(numberOfClients, len(clients))):
+            client = clients[i]
+            
+            if client in net:  # Check if client exists in the network
+                # Randomly select the server
+                server, server_ip = random.choice(list(north_campus_servers.items()))
+
+                
+                # Randomize other parameters
+                parallel_streams = random.randint(1, 5)  # Random number of parallel connections
+                bandwidth = random.choice(["0.625MB", "3.25MB", "9.875MB", "19.75MB", "33MB"])
+                
+                if debug:
+                    print(f"[DEBUG] Starting iperf3 from {client} to {server} server with {parallel_streams} streams and {bandwidth} bandwidth...")
+                
+                net[client].cmd(f"iperf3 -c {server_ip} -p {port} -P {parallel_streams} -b {bandwidth} -t {scenario_time} --json > scenario_normal_folder/normal_results_{client}.json &")
+                
+                net[client].cmd(f"ping -c {scenario_time} FILE > scenario_normal_folder/ping_normal_results_{client}.txt &")
+                port = port + 1 # Take the next free port
+    
+    
+    '''
+    3. Notfall – Netzwerk-Ausfall und Failover-Test (Geht nur bei neuer Topologie weil dynamisch routing)
+
+    In einer Universität ist eine stabile Netzwerkverbindung essenziell, um Vorlesungen, Forschungsarbeiten und Verwaltungsaufgaben sicherzustellen. Doch was passiert, wenn ein zentraler Router oder ein wichtiger Link ausfällt?
+    In diesem Szenario wird simuliert, dass ein zentraler Netzwerk-Knoten (z. B. der Haupt-Router im Rechenzentrum) plötzlich ausfällt.
+    zB mit "link down" auf einem SDN-Switch einer Route und schauen was passiert.
+    '''
+def scenario_emergency(net, numberOfClients):
+    print("[!] Implementation pending in new topology...")
+    time.sleep(2)
+    pass
+
+
+
+
+class CustomCLI(CLI):
+        
+    def do_debug(self, arg):
+        #Toggle debug mode. Usage: debug 1 (enable) / debug 0 (disable)
+        global debug
+        if arg.strip() == "1":
+            debug = 1
+            print("[!] Debug mode enabled.")
+        elif arg.strip() == "0":
+            debug = 0
+            print("[!] Debug mode disabled.")
+        else:
+            print("[!] Usage: debug 1 (enable) / debug 0 (disable)")
+
+    
+    def do_scenario(self, arg):
+        """Run a scenario. Usage: scenario 1"""
+        if arg.strip() == "1":
+            print("[+] Running scenario 'Backup-Welle am Abend'...")
+            scenario_backup(self.mn, numberOfClients)
+            print(f"[!] Don't terminate until simulation is over...(~{scenario_time}sec)")
+            time.sleep(scenario_time+3)
+            print("[+] Done.")
+        elif arg.strip() == "2":
+            print("[+] Running scenario 'Arbeitsalltag'...")
+            scenario_normal(self.mn, numberOfClients)
+            print(f"[!] Don't terminate until simulation is over...(~{scenario_time}sec)")
+            time.sleep(scenario_time+3)
+            print("[+] Done.")
+        elif arg.strip() == "3":
+            print("[+] Running scenario 'Notfall – Netzwerk-Ausfall und Failover-Test'...")
+            scenario_emergency(self.mn, numberOfClients) 
+              
+        else:
+            print("[!] Unknown scenario. Usage: scenario [1|2|3]")
+
+
 
 
 def nettopo(**kwargs):
@@ -102,6 +260,6 @@ if __name__ == '__main__':
     lg.setLogLevel('info')
     net = nettopo()
     net.start()
-    
-    CLI(net)
+    configure_servers(net)
+    CustomCLI(net)
     net.stop()

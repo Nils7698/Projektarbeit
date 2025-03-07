@@ -69,7 +69,7 @@ class ProjectController(app_manager.RyuApp):
                     paths.append(path + [next])
                 else:
                     stack.append((next, path + [next]))
-        print ("Available paths from ", src, " to ", dst, " : ", paths)
+        #print ("Available paths from ", src, " to ", dst, " : ", paths)
         return paths
 
     def get_link_cost(self, s1, s2):
@@ -218,6 +218,7 @@ class ProjectController(app_manager.RyuApp):
                     self.add_flow(dp, 32768, match_ip, actions)
                     self.add_flow(dp, 1, match_arp, actions)
         print ("Path installation finished in ", time.time() - computation_start)
+        print(f"Installierte Route für {ip_src} -> {ip_dst}: {list(paths_with_ports[0].keys())}")
         return paths_with_ports[0][src][1]
 
     def add_flow(self, datapath, priority, match, actions, buffer_id=None):
