@@ -26,4 +26,4 @@ If omitted, the default value is 3 clients per leaf.
 
 ### New SDN-Enabled Topology
 
-The newTopology folder contains a more complex network topology that integrates an SDN controller for advanced network management.
+The `newTopology` folder contains a more complex network topology that integrates an SDN controller for advanced network management.
