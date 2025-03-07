@@ -7,6 +7,7 @@ from mininet.log import lg
 from mininet.topo import Topo
 from mininet.link import TCLink
 import os
+import argparse
 import random
 import time
 
@@ -20,8 +21,9 @@ Scaling: factor 3000
 13333333 packets -> 4444 packets
 '''
 
-debug = 0
-scenario_time = 60
+debug = 0  # default
+scenario_time = 60  # default
+multistream = 1 # default
 stddelay = '2ms'
 stdQueueSize = 4444 # max queue size is in packets, so 1500 Byte (MTU) * 13333333 = 20 GB
 stdbw= 33 # in MBit/s, max 1000 MBit/s 
@@ -313,7 +315,7 @@ def configure_routes(net):
     # Because we are doing tests on Campus North only, we'll have to open more ports so that we
     # can run multiple tests simultaneously. Iperf3 requires separate ports for each test!
     
-    for port in range(5201, 5211):  # 9 ports for each server
+    for port in range(5201, 5202 + numberOfClients*3):  # numberOfClients*3 ports for each server
         net['SCC_N1'].cmd(f"iperf3 -s -p {port} &")
         net['CAMPUS_N'].cmd(f"iperf3 -s -p {port} &")
         net['LSDF'].cmd(f"iperf3 -s -p {port} &")
@@ -340,8 +342,8 @@ def configure_routes(net):
 def scenario_backup(net, numberOfClients):
     
     print(f"[+] Initializing backup...")
-    os.system("mkdir -p scenario_backup_folder")
-    # To delete the folder use "sudo rm -r scenario_backup_folder"
+    os.system(f"mkdir -p {numberOfClients}_scenario_backup")
+    # To delete the folder use "sudo rm -r {numberOfClients}_scenario_backup"
     
     port = 5201 # default iperf3 port
     
@@ -355,15 +357,23 @@ def scenario_backup(net, numberOfClients):
             client = clients[i]
             
             if client in net:  # Check if client exists in the network
-                parallel_streams = random.randint(1, 5)  # Random number of parallel connections
+                if multistream:
+                   parallel_streams = random.randint(1, 5)  # Random number of parallel connections
+                else:
+                   parallel_streams = 1
                 bandwidth = random.choice(["0.625MB", "3.25MB", "9.875MB", "19.75MB", "33MB"]) # Random bandwidth
                 
                 if debug:
-                    print(f"[DEBUG] Starting iperf3 from {client} to FILE server with {parallel_streams} streams and {bandwidth} bandwidth on port {port}...")
-                net[client].cmd(f"iperf3 -c {FILE_ip} -p {port} -P {parallel_streams} -b {bandwidth} -t {scenario_time} --json > scenario_backup_folder/backup_results_{client}.json &")
+                    print(f"[DEBUG] Starting iperf3 from {client} to FILE server with {parallel_streams} stream(s) and {bandwidth} bandwidth on port {port}...")
                 
-                net[client].cmd(f"ping -c {scenario_time} {FILE_ip} > scenario_backup_folder/ping_backup_results_{client}.txt &")
+                if multistream: # if multistreaming enabled
+                    net[client].cmd(f"iperf3 -c {FILE_ip} -p {port} -P {parallel_streams} -b {bandwidth} -t {scenario_time} --json > {numberOfClients}_scenario_backup/{scenario_time}sec_ms_backup_{client}.json &")
+                    net[client].cmd(f"ping -c {scenario_time} {FILE_ip} > {numberOfClients}_scenario_backup/{scenario_time}sec_ms_ping_backup_{client}.txt &")
                 
+                else: # if only one stream per client
+                    net[client].cmd(f"iperf3 -c {FILE_ip} -p {port} -P {parallel_streams} -b {bandwidth} -t {scenario_time} --json > {numberOfClients}_scenario_backup/{scenario_time}sec_backup_{client}.json &")
+                    net[client].cmd(f"ping -c {scenario_time} {FILE_ip} > {numberOfClients}_scenario_backup/{scenario_time}sec_ping_backup_{client}.txt &")
+                    
                 port = port + 1 # Take the next free port
 
     
@@ -375,8 +385,8 @@ def scenario_backup(net, numberOfClients):
 def scenario_normal(net, numberOfClients):
 
     print(f"[+] Initializing a simulation of an average workday...")
-    os.system("mkdir -p scenario_normal_folder")
-    # To delete the folder use "sudo rm -r scenario_normal_folder"
+    os.system(f"mkdir -p {numberOfClients}_scenario_normal")
+    # To delete the folder use "sudo rm -r {numberOfClients}_scenario_normal"
     
     port = 5201 # default iperf3 port
     
@@ -406,15 +416,23 @@ def scenario_normal(net, numberOfClients):
 
                 
                 # Randomize other parameters
-                parallel_streams = random.randint(1, 5)  # Random number of parallel connections
+                if multistream:
+                   parallel_streams = random.randint(1, 5)  # Random number of parallel connections
+                else:
+                   parallel_streams = 1 
                 bandwidth = random.choice(["0.625MB", "3.25MB", "9.875MB", "19.75MB", "33MB"])
                 
                 if debug:
-                    print(f"[DEBUG] Starting iperf3 from {client} to {server} server with {parallel_streams} streams and {bandwidth} bandwidth...")
+                    print(f"[DEBUG] Starting iperf3 from {client} to {server} server with {parallel_streams} stream(s) and {bandwidth} bandwidth on port {port}...")
                 
-                net[client].cmd(f"iperf3 -c {server_ip} -p {port} -P {parallel_streams} -b {bandwidth} -t {scenario_time} --json > scenario_normal_folder/normal_results_{client}.json &")
+                if multistream: # if multistreaming enabled
+                    net[client].cmd(f"iperf3 -c {server_ip} -p {port} -P {parallel_streams} -b {bandwidth} -t {scenario_time} --json > {numberOfClients}_scenario_normal/{scenario_time}sec_ms_normal_{client}.json &")
+                    net[client].cmd(f"ping -c {scenario_time} {FILE_ip} > {numberOfClients}_scenario_normal/{scenario_time}sec_ms_ping_normal_{client}.txt &")
                 
-                net[client].cmd(f"ping -c {scenario_time} {FILE_ip} > scenario_normal_folder/ping_normal_results_{client}.txt &")
+                else: # only one stream per client
+                    net[client].cmd(f"iperf3 -c {server_ip} -p {port} -P {parallel_streams} -b {bandwidth} -t {scenario_time} --json > {numberOfClients}_scenario_normal/{scenario_time}sec_normal_{client}.json &")
+                    net[client].cmd(f"ping -c {scenario_time} {FILE_ip} > {numberOfClients}_scenario_normal/{scenario_time}sec_ping_normal_{client}.txt &")
+                
                 port = port + 1 # Take the next free port
     
     
@@ -458,7 +476,32 @@ class CustomCLI(CLI):
             print("[!] Debug mode disabled.")
         else:
             print("[!] Usage: debug 1 (enable) / debug 0 (disable)")
-
+      
+      
+    def do_multistream(self, arg):
+        """Toggle debug mode. Usage: debug 1 (enable) / debug 0 (disable)"""
+        global multistream
+        if arg.strip() == "1":
+            multistream = 1
+            print("[!] Multistream enabled.")
+        elif arg.strip() == "0":
+            multistream = 0
+            print("[!] Multistream disabled.")
+        else:
+            print("[!] Usage: multistream 1 (enable) / multistream 0 (disable)")
+            
+                
+    def do_scenario_time(self, arg):
+        global scenario_time
+        try:
+            value = int(arg.strip())
+            if 5 <= value:
+                scenario_time = value
+                print(f"[+] Scenario will run for {scenario_time} sec")
+            else:
+                print("[!] Scenario should run for at least 5 sec")
+        except ValueError:
+            print("[!] Invalid input. Usage: scenario_time [sec]")
     
     def do_scenario(self, arg):
         """Run a scenario. Usage: scenario 1"""
@@ -481,17 +524,35 @@ class CustomCLI(CLI):
         else:
             print("[!] Unknown scenario. Usage: scenario [1|2|3]")
 
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="KIT Topology - Network Simulation")
+    parser.add_argument("--clients", type=int, default=numberOfClients, help="Number of clients (default: 3)")
+    return parser.parse_args()
+
+
 def nettopo(**kwargs):
     topo = MyTopo()
     return Mininet(topo=topo, switch=OVSSwitch, controller=None, link=TCLink, **kwargs)
 
 if __name__ == '__main__':
+    args = parse_arguments()
+    numberOfClients = args.clients  # Set the global based on the argument
+    
+    if numberOfClients < 1 or numberOfClients > 10:
+        print("[!] Number of clients must be between 1 and 10")
+        exit(1)
+        
     lg.setLogLevel('info')
     net = nettopo()
     net.start()
     configure_switches(net)
     configure_routes(net)
-    print("[+] Number of Clients: ", numberOfClients * 7)
-    print("[?] Custom commands: debug [val], scenario [val]")
+    print(f"[+] Number of Clients (per Leaf): {numberOfClients}")
+    print("[+] Number of Clients (total): ", numberOfClients * 7)
+    # NOTE!
+    # For our tests we use only the clients on 3 leaf pairs (LN2*, LN9*, LN12*) out of 7 (LN2*, LN9*, LN12*, LS2*, LS8*, LS9*, LS12*)
+    # Because we run the tests on the North Campus network only!
+    print("[?] Custom commands: debug [val], scenario [val], scenario_time [val], multistream [val]") # also --clients [val]
     CustomCLI(net)
     net.stop()
