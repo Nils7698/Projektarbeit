@@ -13,7 +13,17 @@
 
 ____________________
 
-### How To:
-In the 'Code' Folder the kit_topology is the latest KIT network topology.
+### How To
 
-In the newTopology folder is our new, complex topology with a SDN controller
+#### KIT Topology  
+The **`kit_topology`** file in the `Code` folder contains the latest representation of the KIT network topology.  
+
+To run the topology, use:  
+sudo python3 kit_topology_v5.py [--clients N]
+
+The --clients parameter is optional. It defines the number of clients per leaf switch.
+If omitted, the default value is 3 clients per leaf.
+
+### New SDN-Enabled Topology
+
+The newTopology folder contains a more complex network topology that integrates an SDN controller for advanced network management.
