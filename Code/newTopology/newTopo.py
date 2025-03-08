@@ -97,6 +97,17 @@ class MyTopo(Topo):
         addHostsToLeaf("LN9", 3)
         addHostsToLeaf("LN12", 3)
 
+def configure_switches(net):
+    """ Sets all switches in Mininet to standalone mode """
+    
+    print("[+] Configurating switches...")
+    for switch in net.switches:
+        switch.cmd('ovs-vsctl set-fail-mode {} standalone'.format(switch.name))
+        
+    # Check with "sudo ovs-vsctl show" in separate terminal!
+
+
+
 def configure_servers(net):
 
     for port in range(5201, 5211):  # 9 ports for each server
@@ -260,6 +271,7 @@ if __name__ == '__main__':
     lg.setLogLevel('info')
     net = nettopo()
     net.start()
+    configure_switches(net)
     configure_servers(net)
     CustomCLI(net)
     net.stop()
