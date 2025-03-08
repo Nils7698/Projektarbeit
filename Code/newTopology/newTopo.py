@@ -31,7 +31,7 @@ the ryu_multipath.py is from https://github.com/wildan2711/multipath // https://
 '''
 
 debug = 0
-scenario_time = 60
+scenario_time = 600
 stddelay = '2ms'
 numberOfClients = 3 # default value
 stdQueueSize = 4444 # max queue size is in packets, so 1500 Byte (MTU) * 13333333 = 20 GB
@@ -171,12 +171,12 @@ def scenario_normal(net, numberOfClients):
     
     # Define the list of servers for North Campus
     north_campus_servers = {
-    "SCC_N1": SCC_N1_ip, 
-    "CAMPUS_N": CAMPUS_N_ip, 
-    "LSDF": LSDF_ip, 
-    "FILE": FILE_ip, 
-    "SCC_N2": SCC_N2_ip, 
-    "BWCLOUD": BWCLOUD_ip
+    "SCC_N1": "10.0.0.14", 
+    "CAMPUS_N": "10.0.0.2", 
+    "LSDF": "10.0.0.13", 
+    "FILE": "10.0.0.3", 
+    "SCC_N2": "10.0.0.15", 
+    "BWCLOUD": "10.0.0.1"
      }
 
     
@@ -203,7 +203,7 @@ def scenario_normal(net, numberOfClients):
                 
                 net[client].cmd(f"iperf3 -c {server_ip} -p {port} -P {parallel_streams} -b {bandwidth} -t {scenario_time} --json > scenario_normal_folder/normal_results_{client}.json &")
                 
-                net[client].cmd(f"ping -c {scenario_time} FILE > scenario_normal_folder/ping_normal_results_{client}.txt &")
+                net[client].cmd(f"ping -c {scenario_time} 10.0.0.3 > scenario_normal_folder/ping_normal_results_{client}.txt &")
                 port = port + 1 # Take the next free port
     
     
@@ -215,9 +215,52 @@ def scenario_normal(net, numberOfClients):
     zB mit "link down" auf einem SDN-Switch einer Route und schauen was passiert.
     '''
 def scenario_emergency(net, numberOfClients):
-    print("[!] Implementation pending in new topology...")
-    time.sleep(2)
-    pass
+
+    print(f"[+] Initializing a simulation of an average workday with link failure...")
+    os.system("mkdir -p scenario_link_failure_folder")
+    
+    port = 5201  # Default iperf3 port
+
+    # Define the list of servers for North Campus
+    north_campus_servers = {
+        "SCC_N1": "10.0.0.14",
+        "CAMPUS_N": "10.0.0.2",
+        "LSDF": "10.0.0.13",
+        "FILE": "10.0.0.3",
+        "SCC_N2": "10.0.0.15",
+        "BWCLOUD": "10.0.0.1"
+    }
+
+    for j in range(1, numberOfClients + 1):
+        clients = [f'LN2C{j}', f'LN9C{j}', f'LN12C{j}']  # Only North Campus!
+
+        for i in range(min(numberOfClients, len(clients))):
+            client = clients[i]
+
+            if client in net:  # Check if client exists in the network
+                server, server_ip = random.choice(list(north_campus_servers.items()))
+
+                parallel_streams = random.randint(1, 5)  # Random number of parallel connections
+                bandwidth = random.choice(["0.625MB", "3.25MB", "9.875MB", "19.75MB", "33MB"])
+
+                net[client].cmd(f"iperf3 -c {server_ip} -p {port} -P {parallel_streams} -b {bandwidth} -t {scenario_time} --json > scenario_link_failure_folder/fail_results_{client}.json &")
+                net[client].cmd(f"ping -c {scenario_time} FILE > scenario_link_failure_folder/ping_fail_results_{client}.txt &")
+                
+                port += 1  # Take the next free port
+
+    # Warten bis zur Hälfte der Szenariozeit
+    time.sleep(scenario_time / 2)
+    print("[+] Simulating link failure...")
+
+    # Beispielhafte Link-Failures – passe das an deine Topologie an
+    links_to_fail = [("LN5", "LN6"), ("LN6", "LN7"), ("LN7", "LN8")]
+    
+    for link in links_to_fail:
+        node1, node2 = link
+        if node1 in net and node2 in net:
+            net.configLinkStatus(node1, node2, 'down')
+            print(f"[-] Link between {node1} and {node2} is now DOWN!")
+
 
 
 

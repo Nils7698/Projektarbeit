@@ -1,3 +1,2 @@
 # Ignoriere die spezifischen Ordner
-scenario_backup_folder/
-scenario_normal_folder/
+Code/newTopology/__pycache__
