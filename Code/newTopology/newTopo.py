@@ -31,7 +31,7 @@ the ryu_multipath.py is from https://github.com/wildan2711/multipath // https://
 '''
 
 debug = 0
-scenario_time = 600
+scenario_time = 600 # in seconds
 stddelay = '2ms'
 numberOfClients = 3 # default value
 stdQueueSize = 4444 # max queue size is in packets, so 1500 Byte (MTU) * 13333333 = 20 GB
@@ -111,12 +111,12 @@ def configure_switches(net):
 def configure_servers(net):
 
     for port in range(5201, 5211):  # 9 ports for each server
-        net['SCC_N1'].cmd(f"iperf3 -s -p {port} &")
-        net['CAMPUS_N'].cmd(f"iperf3 -s -p {port} &")
-        net['LSDF'].cmd(f"iperf3 -s -p {port} &")
-        net['FILE'].cmd(f"iperf3 -s -p {port} &")
-        net['SCC_N2'].cmd(f"iperf3 -s -p {port} &")
-        net['BWCLOUD'].cmd(f"iperf3 -s -p {port} &")
+        net['SCC_N1'].cmd(f"iperf3 -s -p {port} -V --json > scc_n1.json &")
+        net['CAMPUS_N'].cmd(f"iperf3 -s -p {port} -V --json > campus_n.json &")
+        net['LSDF'].cmd(f"iperf3 -s -p {port} -V --json > lsdf.json &")
+        net['FILE'].cmd(f"iperf3 -s -p {port} -V --json > fileserver.json &")
+        net['SCC_N2'].cmd(f"iperf3 -s -p {port} -V --json > scc_n2.json &")
+        net['BWCLOUD'].cmd(f"iperf3 -s -p {port} -V --json > bwcloud.json &")
 
     '''
     Netzwerk Szenarios:
@@ -149,7 +149,7 @@ def scenario_backup(net, numberOfClients):
                 
                 if debug:
                     print(f"[DEBUG] Starting iperf3 from {client} to FILE server with {parallel_streams} streams and {bandwidth} bandwidth on port {port}...")
-                net[client].cmd(f"iperf3 -c 10.0.0.3 -p {port} -P {parallel_streams} -b {bandwidth} -t {scenario_time} --json > scenario_backup_folder/backup_results_{client}.json &")
+                net[client].cmd(f"iperf3 -c 10.0.0.3 -p {port} -P {parallel_streams} -b {bandwidth} -t {scenario_time} -V --json > scenario_backup_folder/backup_results_{client}.json &")
                 
                 net[client].cmd(f"ping -c {scenario_time} 10.0.0.3 > scenario_backup_folder/ping_backup_results_{client}.txt &")
                 
@@ -201,7 +201,7 @@ def scenario_normal(net, numberOfClients):
                 if debug:
                     print(f"[DEBUG] Starting iperf3 from {client} to {server} server with {parallel_streams} streams and {bandwidth} bandwidth...")
                 
-                net[client].cmd(f"iperf3 -c {server_ip} -p {port} -P {parallel_streams} -b {bandwidth} -t {scenario_time} --json > scenario_normal_folder/normal_results_{client}.json &")
+                net[client].cmd(f"iperf3 -c {server_ip} -p {port} -P {parallel_streams} -b {bandwidth} -t {scenario_time} -V --json > scenario_normal_folder/normal_results_{client}.json &")
                 
                 net[client].cmd(f"ping -c {scenario_time} 10.0.0.3 > scenario_normal_folder/ping_normal_results_{client}.txt &")
                 port = port + 1 # Take the next free port
@@ -243,7 +243,7 @@ def scenario_emergency(net, numberOfClients):
                 parallel_streams = random.randint(1, 5)  # Random number of parallel connections
                 bandwidth = random.choice(["0.625MB", "3.25MB", "9.875MB", "19.75MB", "33MB"])
 
-                net[client].cmd(f"iperf3 -c {server_ip} -p {port} -P {parallel_streams} -b {bandwidth} -t {scenario_time} --json > scenario_link_failure_folder/fail_results_{client}.json &")
+                net[client].cmd(f"iperf3 -c {server_ip} -p {port} -P {parallel_streams} -b {bandwidth} -t {scenario_time} -V --json > scenario_link_failure_folder/fail_results_{client}.json &")
                 net[client].cmd(f"ping -c {scenario_time} FILE > scenario_link_failure_folder/ping_fail_results_{client}.txt &")
                 
                 port += 1  # Take the next free port
