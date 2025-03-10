@@ -42,7 +42,9 @@ Each topology generates a folder to store measured data for different scenarios.
 `number_of_clients_per_leaf`: The number of clients assigned to each leaf pair.
 
 `scenario_type`: The type of scenario being tested (e.g., backup, normal).
+
 <br>
+
 _Examples:_
 
 `3_scenario_backup` → Each leaf pair has three clients that initiate communication with the servers, tested under a backup scenario.
@@ -50,6 +52,7 @@ _Examples:_
 `5_scenario_backup` → Each leaf pair has five clients, tested under a backup scenario.
 
 <br>
+
 ### Naming Convention for Client Data Files<br>
 For each client, the measured data is stored in a separate `.json` file following this naming convention:
 
@@ -62,7 +65,9 @@ For each client, the measured data is stored in a separate `.json` file followin
 `scenario_type`: The type of scenario being tested (e.g., backup, normal, emergency).
 
 `client_name`: The name of the client.
+
 <br>
+
 _Examples:_
 
 `60sec_backup_LN12C1.json` → Contains all measured data for client LN12C1, tested under the backup scenario for 60 seconds using single-streaming.
