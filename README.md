@@ -11,7 +11,7 @@
 - [x] Create networking scenarios
 - [ ] execute the scenarios and save data
 
-<br><br><br>
+<br><br>
 
 # KIT Topology  
 The **`kit_topology`** file in the `Code` folder contains the latest representation of the KIT network topology.  
@@ -22,16 +22,16 @@ sudo python3 kit_topology_v5.py [--clients N]
 The --clients parameter is optional. It defines the number of clients per leaf switch.
 If omitted, the default value is 3 clients per leaf.
 
-<br><br><br>
+<br>
 
 # New SDN-Enabled Topology
 
 The `newTopology` folder contains a more complex network topology that integrates an SDN controller for advanced network management.
 
-<br><br><br>
+<br>
 
 # Naming Convention
-<br><br>
+<br>
 ### Naming Convention for Folders
 
 Each topology generates a folder to store measured data for different scenarios. The naming convention for these folders follows the format:
@@ -40,14 +40,14 @@ Each topology generates a folder to store measured data for different scenarios.
 
 `number_of_clients_per_leaf`: The number of clients assigned to each leaf pair.
 `scenario_type`: The type of scenario being tested (e.g., backup, normal).
-<br><br>
+<br>
 _Examples:_
 
 `3_scenario_backup` → Each leaf pair has three clients that initiate communication with the servers, tested under a backup scenario.
 
 `5_scenario_backup` → Each leaf pair has five clients, tested under a backup scenario.
 
-<br><br><br>
+<br>
 ### Naming Convention for Client Data Files
 For each client, the measured data is stored in a separate `.json` file following this naming convention:
 
@@ -60,7 +60,7 @@ For each client, the measured data is stored in a separate `.json` file followin
 `scenario_type`: The type of scenario being tested (e.g., backup, normal, emergency).
 
 `client_name`: The name of the client.
-<br><br>
+<br>
 _Examples:_
 
 `60sec_backup_LN12C1.json` → Contains all measured data for client LN12C1, tested under the backup scenario for 60 seconds using single-streaming.
