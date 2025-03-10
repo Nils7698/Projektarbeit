@@ -13,8 +13,6 @@
 
 ____________________
 
-### How To
-
 #### KIT Topology  
 The **`kit_topology`** file in the `Code` folder contains the latest representation of the KIT network topology.  
 
@@ -27,6 +25,8 @@ If omitted, the default value is 3 clients per leaf.
 ### New SDN-Enabled Topology
 
 The `newTopology` folder contains a more complex network topology that integrates an SDN controller for advanced network management.
+
+____________________
 
 ### Naming Convention for Data Files
 Each topology generates a folder to store measured data for different scenarios. The naming convention for these folders follows the format:
