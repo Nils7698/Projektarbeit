@@ -13,7 +13,7 @@
 
 <br><br>
 
-# KIT Topology  
+## KIT Topology  
 The **`kit_topology`** file in the `Code` folder contains the latest representation of the KIT network topology.  
 
 To run the topology, use:  
@@ -24,7 +24,7 @@ If omitted, the default value is 3 clients per leaf.
 
 <br>
 
-# New SDN-Enabled Topology
+## New SDN-Enabled Topology
 
 The `newTopology` folder contains a more complex network topology that integrates an SDN controller for advanced network management.
 
@@ -32,7 +32,7 @@ The `newTopology` folder contains a more complex network topology that integrate
 
 # Naming Convention
 <br>
-### Naming Convention for Folders
+## Naming Convention for Folders
 
 Each topology generates a folder to store measured data for different scenarios. The naming convention for these folders follows the format:
 
@@ -48,7 +48,7 @@ _Examples:_
 `5_scenario_backup` → Each leaf pair has five clients, tested under a backup scenario.
 
 <br>
-### Naming Convention for Client Data Files
+## Naming Convention for Client Data Files
 For each client, the measured data is stored in a separate `.json` file following this naming convention:
 
 [duration]__[ms]__[scenario_type]_[client_name].json
