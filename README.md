@@ -31,7 +31,6 @@ The `newTopology` folder contains a more complex network topology that integrate
 <br>
 
 # Naming Convention
-
 <br>
 
 ### Naming Convention for Folders<br>
