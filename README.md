@@ -13,7 +13,7 @@
 
 ____________________
 
-#### KIT Topology  
+# KIT Topology  
 The **`kit_topology`** file in the `Code` folder contains the latest representation of the KIT network topology.  
 
 To run the topology, use:  
@@ -22,13 +22,19 @@ sudo python3 kit_topology_v5.py [--clients N]
 The --clients parameter is optional. It defines the number of clients per leaf switch.
 If omitted, the default value is 3 clients per leaf.
 
-### New SDN-Enabled Topology
+# New SDN-Enabled Topology
 
 The `newTopology` folder contains a more complex network topology that integrates an SDN controller for advanced network management.
 
+
+
+
+
+# Naming Convention
 ____________________
 
-### Naming Convention for Data Files
+### Naming Convention for Folders
+
 Each topology generates a folder to store measured data for different scenarios. The naming convention for these folders follows the format:
 
 [number_of_clients_per_leaf]__scenario__[scenario_type]
@@ -36,11 +42,12 @@ Each topology generates a folder to store measured data for different scenarios.
 `number_of_clients_per_leaf`: The number of clients assigned to each leaf pair.
 `scenario_type`: The type of scenario being tested (e.g., backup, normal).
 
-Examples:
+_Examples:_
 
 `3_scenario_backup` → Each leaf pair has three clients that initiate communication with the servers, tested under a backup scenario.
 
 `5_scenario_backup` → Each leaf pair has five clients, tested under a backup scenario.
+
 
 ### Naming Convention for Client Data Files
 For each client, the measured data is stored in a separate `.json` file following this naming convention:
