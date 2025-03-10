@@ -31,9 +31,10 @@ The `newTopology` folder contains a more complex network topology that integrate
 <br>
 
 # Naming Convention
-<br>
-## Naming Convention for Folders
 
+<br>
+
+### Naming Convention for Folders<br>
 Each topology generates a folder to store measured data for different scenarios. The naming convention for these folders follows the format:
 
 [number_of_clients_per_leaf]__scenario__[scenario_type]
@@ -49,8 +50,7 @@ _Examples:_
 `5_scenario_backup` → Each leaf pair has five clients, tested under a backup scenario.
 
 <br>
-## Naming Convention for Client Data Files
-
+### Naming Convention for Client Data Files<br>
 For each client, the measured data is stored in a separate `.json` file following this naming convention:
 
 [duration]__[ms]__[scenario_type]_[client_name].json
