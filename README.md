@@ -33,7 +33,6 @@ The `newTopology` folder contains a more complex network topology that integrate
 # Naming Convention
 <br>
 ## Naming Convention for Folders
-
 Each topology generates a folder to store measured data for different scenarios. The naming convention for these folders follows the format:
 
 [number_of_clients_per_leaf]__scenario__[scenario_type]
