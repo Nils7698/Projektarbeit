@@ -9,7 +9,7 @@
 - [x] look what metrics we can collect
 - [x] create new, complex topology
 - [x] Create networking scenarios
-- [ ] execute the scenarios and save data
+- [x] execute the scenarios and save data
 
 <br><br>
 
